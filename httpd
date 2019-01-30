@@ -1,0 +1,67 @@
+#! /bin/bash
+
+# I wrote this thing many years ago ... 
+
+# WARNING: THIS SERVER IS NOT SECURE. DO NOT EXPOSE TO PUBLIC INTERNET
+# Set configuration
+COMMAND="`pwd`/proxy.sh"
+if [ -f './httpd.conf' ]; then
+	COMMAND="`tac ./config | grep -m 1 -e 'COMMAND[[:space:]]*=[[:space:]]*' - | sed 's/COMMAND[[:space:]]*=[[:space:]]*//' -`"
+fi
+if [ "$1" != "" ]; then
+	COMMAND="$1"
+fi
+( >&2 echo 'Simple HTTP Server in written in sh. View README for details.' )
+
+respond ( ) {	# Respond to client
+	echo "HTTP/1.0 $HTTP_RESPONSE"
+	echo "Date: `date -u +%a,\ %d\ %b\ %Y\ %H:%M:%S\ GMT`"
+	echo "Server: tuoran-ware/3.1"
+	echo "Content-length: `du -b $sessionid | grep -oe '^[0-9]*'`"
+	echo ''
+	cat $sessionid
+	rm $sessionid
+	exit
+}
+
+error ( ) {	# HTTP Errors
+	response="$1"
+	echo "<HTML><HEAD><TITLE>$1</TITLE></HEAD><BODY><H1>$1</H1></BODY></HTML>" >> $sessionid.o
+	respond
+}
+
+# Process HTTP Request
+#cd /tmp/
+export sessionid="`mktemp`"	# TODO: Use memory instead of disk NEW NOTE: Bad idea!
+test "$sessionid" == '' &&
+	export sessionid="/tmp/httpd$$"	# Process ID
+echo "DEBUG: DATA SAVED TO $sessionid" 1>&2 
+
+export HTTP_HEADER="`timeout 3 head -n 1 -`"
+
+test "a$HTTP_HEADER" == 'a' &&	# Timeouts
+	error '408 Request Timeout'
+export HTTP_METHOD="`echo $HTTP_HEADER | grep -oe '^[A-Z]*' - `"
+export HTTP_URI="`echo $HTTP_HEADER | cut -d ' ' -f 2 `"
+
+if echo "$HTTP_HEADER" | grep -qoE '^(GET|HEAD)'; then
+	export HTTP_RESPONSE=''
+
+	# If not HEAD
+	if [ "$HTTP_METHOD" != 'HEAD' ]; then
+		if test -f "$COMMAND" ; then
+			head -n 1 $COMMAND | grep -qe 'bash$' &&
+				( . $COMMAND 1> $sessionid || true ) ||
+				$COMMAND 1> $sessionid
+		fi
+	fi
+
+	test "a$HTTP_RESPONSE" == 'a' &&
+		HTTP_RESPONSE='200 OK'
+else
+	error '501 Not Implemented'
+fi
+respond
+exit
+
+

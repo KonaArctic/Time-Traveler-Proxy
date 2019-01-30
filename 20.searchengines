@@ -1,0 +1,33 @@
+#!/bin/bash
+
+echo "$HTTP_URI" | grep -qEe '((www\.)?altavista(\.digital)?\.com/cgi-bin/query\?pg=(q|aq).)|(search\.yahoo\.com/bin/search?p=)' - ||
+	exit 1
+source error.sh
+
+# Searches AltaVista
+
+if echo "$HTTP_URI" | grep -e 'altavista' - | grep -e 'what=web' - | grep -qe 'q=' - ; then
+	source search.sh
+	export SEARCH_QUERY="`echo "$HTTP_URI" | grep -oEe 'q=[^&]+' - | cut -c 3- - `"
+	test "a$SEARCH_QUERY" == 'a' &&
+		exit 129
+
+	SEARCH_DATA="`search`"
+	rtn=$?
+	test $rtn -gt 129 &&
+		exit 129
+
+	export SEARCH_FORMAT="`searchengine`"
+	test "a$SEARCH_FORMAT" == 'a' &&
+		error "Time Travelers' proxy query processing has suffered an internal error." 'Internal Search Error' ||
+
+	echo "$SEARCH_DATA" | ./search/$SEARCH_FORMAT $rtn
+
+	exit $?
+fi
+
+errorfancy "the Time Travelers' proxy does not support your web query (yet!)." "Time Travelers' proxy does not support your web query"
+
+exit 0
+
+
