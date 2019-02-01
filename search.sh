@@ -20,12 +20,16 @@ function search {
 	# Don't you just love it when a website acutally offers an easy-to-use API
 
 	export SEARCH_TIME=`expr $PROXY_STAMP \- 00030000000000`
-	dat="`wecache "https://arquivo.pt/textsearch?q=$SEARCH_QUERY&from=$PROXY_TIME&to=$PROXY_STAMP&offset=$SEARCH_OFFSET&maxItems=50&itemsPerSite=1&fields=originalURL,title,snippet,contentLength,tstamp&prettyPrint=false" | tr -dc '[[:print:]]' `"
+	export SEARCH_FUZZ="`test a$PROXY_FUZZ != a && echo $PROXY_FUZZ || echo $PROXY_TIME`"
+
+	dat="`wecache "https://arquivo.pt/textsearch?q=$SEARCH_QUERY&from=$PROXY_TIME&to=$PROXY_FUZZ&offset=$SEARCH_OFFSET&maxItems=50&itemsPerSite=1&fields=originalURL,title,snippet,contentLength,tstamp&prettyPrint=false" | tr -dc '[[:print:]]' `"
 	rtn=$?
 	test $rtn -eq 0 ||
 		return 129
 
 	export SEARCH_QUERY="`echo "$dat" | grep -oEe 'request_parameters":{"q":"[^"]+' - | cut -c 27- - | tr '+' ' ' `"
+	export SEARCH_ITEMS="`echo "$dat" | grep -oEe 'total_items":"[0-9]+' - | grep -oEe '[0-9]+' - `"
+
 	dat="`echo "$dat" | \
 		# Strips irrelevent data 
                 sed 's|\t| |' - | \
@@ -52,5 +56,4 @@ function search {
 		return 1 ||
 		return 0
 }
-
 
