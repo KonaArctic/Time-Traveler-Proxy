@@ -36,7 +36,7 @@ To get an exact match count, go to Advanced Search and select
 <FONT size=-1><PRE> Word count: encryption:155333<BR> Ignored :    data: 10108998<BR></PRE></FONT><P>-->'
 
 test $1 -eq 0 &&
-	echo '<b> Documents 1-10  of about 3000  matching the query,  best matches first.</b><br></P><dl>' ||
+	echo "<b> Documents 1-10  of about ${SEARCH_ITEMS}00  matching the query,  best matches first.</b><br></P><dl>" ||
 	echo '<b> Documents 1-10  of about 0  matching the query,  best matches first.</b><br></P><dl>'
 
 #<dt><A HREF="dium.htm"><strong>Ciphers, Codes, and Encryption</strong></a></dt><dd>Ciphers, Codes, and Encryption. Encryption. provides a method to protect information. computers can create codes that are not worth breaking. RSA, DES,...<br><cite><A HREF="dium.htm">http://www.cs.uidaho.edu:80/~karenv/cs101/security.html</a><font size=-1> - size 4K - 3 May 96</font></cite><br><p></p></dd>
@@ -47,9 +47,12 @@ for i in `head -n 10 -` ; do
 	SEARCH_SNIPPET="`echo $i | cut -f 5 - | sed 's|<em>|<b>|g' - | sed 's|</em>|</b>|g' -`"
 	SEARCH_DATE="`echo $i | cut -f 3 - | sed -e 's|\(....\)\(..\)\(..\)......|\1/\2/\3|' - `"
 	SEARCH_SIZE="`echo $i | cut -f 4 - `"
-	SEARCH_SIZE="`expr $SEARCH_SIZE / 1024`"
 
-	echo "<dt><A HREF=\"${SEARCH_URL}\"><strong>${SEARCH_TITLE}</strong></a></dt><dd>${SEARCH_SNIPPET}<br><cite><A HREF=\"${SEARCH_URL}\">${SEARCH_URL}</a><font size=-1> - size ${SEARCH_SIZE}K - ${SEARCH_DATE}</font></cite><br><p></p></dd>"
+	test $SEARCH_SIZE -gt 1024 &&
+		SEARCH_SIZE="`expr $SEARCH_SIZE / 1024`K" ||
+		SEARCH_SIZE="${SEARCH_SIZE}b"
+
+	echo "<dt><A HREF=\"${SEARCH_URL}\"><strong>${SEARCH_TITLE}</strong></a></dt><dd>${SEARCH_SNIPPET}<br><cite><A HREF=\"${SEARCH_URL}\">${SEARCH_URL}</a><font size=-1> - size ${SEARCH_SIZE} - ${SEARCH_DATE}</font></cite><br><p></p></dd>"
 
 done
 
@@ -89,5 +92,4 @@ echo " <a href=\"${HTTP_URI}\">${HTTP_URI} </a> </h6>
 "
 
 exit 0
-
 
