@@ -6,7 +6,8 @@ source wecache.sh
 function archive {	# Internet Archive has since removed altavista.digital.com from their library when I started writing... 
 	chkdate "https://web.archive.org/web/${PROXY_STAMP}id_/$HTTP_URI" ||
 	chkdate "http://wayback.vefsafn.is/wayback/${PROXY_STAMP}id_/$HTTP_URI" ||	# Since the Icelandic web archive runs the same software as the Internet Archive, I'll just bind them together.
-	chkdate "http://wayback.archive-it.org/all/${PROXY_STAMP}id_/$HTTP_URI"	# And here's Archive-It
+	chkdate "http://wayback.archive-it.org/all/${PROXY_STAMP}id_/$HTTP_URI"	|| # And here's Archive-It
+	chkdate "http://webarchive.loc.gov/all/${PROXY_STAMP}id_/$HTTP_URI" # Library of congress
 	return $?
 }
 
