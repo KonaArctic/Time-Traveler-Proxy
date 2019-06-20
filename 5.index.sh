@@ -32,18 +32,23 @@ function index {	# Directory index generation
 	</HTML>'
 }
 
+# Grabs root file 
+HTTP_URI="`echo $HTTP_URI | sed -Ee 's|^http://[^/]+||' - `"
+
 if test -f "$PROXY_ROOT$HTTP_URI" ; then
 	cat "$PROXY_ROOT$HTTP_URI"
 	exit 0
 fi
 
 if test -d "$PROXY_ROOT$HTTP_URI" ; then
-	index "$PROXY_ROOT$HTTP_URI"
+	test -f "$PROXY_ROOT$HTTP_URI/index.html" &&
+		cat "$PROXY_ROOT$HTTP_URI/index.html" ||
+		index "$PROXY_ROOT$HTTP_URI"
 	exit 0
 fi
 
 source error.sh
-error 'the requested file was not found on your host machine.' 'File non-existent'
+errorfancy 'the requested file was not found on your host machine.' 'File non-existent'
 exit 0
 
 
