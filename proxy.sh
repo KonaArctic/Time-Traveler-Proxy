@@ -13,6 +13,9 @@ export PROXY_HOST="`hostname`"
 export PROXY_STAMP="19981013055006"
 export PROXY_FUZZ=''
 
+# Hotfix: add execute permission to everything
+chmod -R +x *
+
 source configure.sh
 
 export stamp="$PROXY_STAMP"
